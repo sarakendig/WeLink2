@@ -11,13 +11,13 @@ const session = require('express-session');
 require('dotenv').config()
 
 
-
+const io = require('socket.io').listen(3004).sockets;
 
 //___________________
 //Port
 //___________________
 // Allow use of Heroku's port or your own local port, depending on the environment
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3004;
 
 //___________________
 //Database
@@ -35,8 +35,7 @@ mongoose.connect(
     },
     () => {
         console.log('the connection with mongod is established at', MONGODB_URI)
-    }
-)
+    })
 
 // Error / success
 db.on('error', (err) => console.log(err.message + ' is Mongod not running?'));
@@ -50,6 +49,9 @@ db.on('open', () => {});
 //___________________
 //Middleware
 //___________________
+
+// Attach session
+app.use(session);
 
 //use public folder for static assets
 app.use(express.static('public'));
@@ -66,7 +68,7 @@ app.use(methodOverride('_method')); // allow POST, PUT and DELETE from a form
 
 app.use(
     session({
-        secret: process.env.SECRET, //a random string do not copy this value or your stuff will get hacked
+        secret: 'scretIdHere', //a random string do not copy this value or your stuff will get hacked
         resave: false, // default more info: https://www.npmjs.com/package/express-session#resave
         saveUninitialized: false // default  more info: https://www.npmjs.com/package/express-session#resave
     })
@@ -86,8 +88,11 @@ app.use('/users', usersController)
 const sessionsController = require('./controllers/sessions_controller.js')
 app.use('/sessions', sessionsController)
 
-// const chatsController = require('./controllers/chats_controller.js')
-// app.use('/chats', chatsController)
+const chatsController = require('./controllers/chats_controller.js')
+app.use('/chats', chatsController)
+
+const clientController = require('./controllers/client_controller.js')
+app.use('/chats', clientController)
 
 
 
@@ -96,18 +101,14 @@ app.use('/sessions', sessionsController)
 // Routes
 //___________________
 //localhost:3004
-app.get('/messages', (req, res) => {
-    res.send('Hello 🌎! ');
+app.get('/', (req, res) => {
+    res.redirect('/messages')
 });
 
 //___________________
 //Listener
 //___________________
 
-
-// server.listen(PORT, () => {
-//     console.log('💻 Listening on port 🔥', server.address().port);
-// });
 
 app.listen(PORT, () => {
     console.log('💻 Listening on port 🔥', PORT)
