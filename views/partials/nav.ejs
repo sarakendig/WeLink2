@@ -5,7 +5,7 @@
   </ul>
   <a href="" class="brand-logo center grey-text text-darken-4"><i class="material-icons grey-text text-darken-4">mms</i>WeLink</a>
 <ul class="right">
-    <% if (currentUser) { %>
+    <% if (req.session.currentUser) { %>
     <li>Welcome <%= currentUser.username %></li>
     <li>
       <form action="/sessions?_method=DELETE" method="POST">
