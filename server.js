@@ -1,9 +1,10 @@
 //___________________
 //Dependencies
 //___________________
+const express = require("express")();
 
 
-var app = require('express')(),
+const app = require('express')(),
     server = require("http").createServer(app),
     io = require("socket.io")(server),
     session = require("express-session")({
@@ -68,9 +69,7 @@ app.use(session);
 // app.use(express.static('public'));
 
 // populates req.body with parsed info from forms - if no data from forms will return an empty object {}
-app.use(express.urlencoded({
-    extended: false
-})); // extended: false - does not allow nested objects in query strings
+app.use(express.urlencoded({extended: false})); // extended: false - does not allow nested objects in query strings
 app.use(express.json()); // returns middleware that only parses JSON - may or may not need it depending on your project
 
 //use method override
