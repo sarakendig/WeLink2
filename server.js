@@ -1,10 +1,10 @@
 //___________________
 //Dependencies
 //___________________
-const express = require("express")();
+const express = require("express");
 
 
-const app = require('express')(),
+const app = express(),
     server = require("http").createServer(app),
     io = require("socket.io")(server),
     session = require("express-session")({
@@ -20,7 +20,7 @@ const mongoose = require('mongoose');
 const db = mongoose.connection;
 
 
-require('dotenv').config()
+require('dotenv').config();
 
 
 
@@ -47,7 +47,7 @@ mongoose.connect(
     },
     () => {
         console.log('the connection with mongod is established at', MONGODB_URI)
-    })
+    });
 
 // Error / success
 db.on('error', (err) => console.log(err.message + ' is Mongod not running?'));
@@ -66,10 +66,12 @@ db.on('open', () => {});
 app.use(session);
 
 //use public folder for static assets
-// app.use(express.static('public'));
+app.use(express.static(__dirname));
 
 // populates req.body with parsed info from forms - if no data from forms will return an empty object {}
-app.use(express.urlencoded({extended: false})); // extended: false - does not allow nested objects in query strings
+app.use(express.urlencoded({
+    extended: false
+})); // extended: false - does not allow nested objects in query strings
 app.use(express.json()); // returns middleware that only parses JSON - may or may not need it depending on your project
 
 //use method override
@@ -109,7 +111,7 @@ app.use('/sessions', sessionsController)
 app.get('/', (req, res) => {
     res.redirect('/messages')
 });
-app.get('/chat', (req, res) => res.sendFile(__dirname + '/index.ejs'))
+app.get('/chat', (req, res) => res.sendFile(__dirname + '/views/chat/index.ejs'));
 
 
 //___________________
@@ -117,41 +119,41 @@ app.get('/chat', (req, res) => res.sendFile(__dirname + '/index.ejs'))
 //___________________
 
 // Share session with io sockets
- 
+
 io.use(sharedsession(session));
- 
+
 
 io.on("connection", socket => {
-	socket.emit('sessiondata', socket.handshake.session);
+    socket.emit('sessiondata', socket.handshake.session);
 
-    console.log('new user connected ', socket.id)
+    console.log('new user connected ', socket.id);
 
-    socket.on('login', function(userdata) {
+    socket.on('login', function (userdata) {
         socket.handshake.session.userdata = userdata;
         socket.handshake.session.save();
         socket.emit('login', socket.handshake.session + 'Welcome to the Chat!');
     });
 
-    socket.on('checksession', function() {
-		debug('Received checksession message');
+    socket.on('checksession', function () {
+        debug('Received checksession message');
 
-		debug('socket.handshake session data is %j.', socket.handshake.session);
+        debug('socket.handshake session data is %j.', socket.handshake.session);
 
-		socket.emit('checksession', socket.handshake.session);
+        socket.emit('checksession', socket.handshake.session);
     });
-    
+
     socket.on('chat', msg => {
         console.log(msg)
-        io.emit('chat', socket.handshake.session +':' + msg)
+        io.emit('chat', socket.handshake.session + ':' + msg)
     });
 
-    socket.on('logout',function(userdata) {
+    socket.on('logout', function (userdata) {
         if (socket.handshake.session.userdata) {
             delete socket.handshake.session.userdata;
             socket.handshake.session.save();
         }
         io.emit('logout', socket.handshake.session + ' has disconnected')
-    });        
+    });
 
 
 })

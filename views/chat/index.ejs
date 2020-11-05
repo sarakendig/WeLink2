@@ -76,12 +76,12 @@
             socket.on('login', msg => {
                 console.info("logged_in event received. Check the console");
                 console.info("sessiondata after logged_in event is ", data);
-                $('#user-box').append($('<li>').text(socket.id))
-                $('#message-box').append($('<li>').text(msg))
+                $('#user-box').append($('<li>').text(socket.id));
+                $('#message-box').append($('<li>').text(msg));
             })
 
             socket.on('logout', msg => {
-                $('#message-box').append($('<li>').text(msg))
+                $('#message-box').append($('<li>').text(msg));
             })
 
             socket.on("checksession", data => {
@@ -89,7 +89,7 @@
                 console.info("sessiondata after checksession event is ", data);
             })
 
-           
+
         });
     </script>
 
