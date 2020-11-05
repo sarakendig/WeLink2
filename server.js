@@ -1,17 +1,28 @@
 //___________________
 //Dependencies
 //___________________
-const express = require('express');
+
+
+var app = require('express')(),
+    server = require("http").createServer(app),
+    io = require("socket.io")(server),
+    session = require("express-session")({
+        secret: "my-secret",
+        resave: true,
+        saveUninitialized: true
+    }),
+    sharedsession = require("express-socket.io-session");
+
+
 const methodOverride = require('method-override');
 const mongoose = require('mongoose');
-const app = express();
 const db = mongoose.connection;
-const session = require('express-session');
+
 
 require('dotenv').config()
 
 
-const io = require('socket.io').listen(3004).sockets;
+
 
 //___________________
 //Port
@@ -54,7 +65,7 @@ db.on('open', () => {});
 app.use(session);
 
 //use public folder for static assets
-app.use(express.static('public'));
+// app.use(express.static('public'));
 
 // populates req.body with parsed info from forms - if no data from forms will return an empty object {}
 app.use(express.urlencoded({
@@ -66,13 +77,13 @@ app.use(express.json()); // returns middleware that only parses JSON - may or ma
 app.use(methodOverride('_method')); // allow POST, PUT and DELETE from a form
 
 
-app.use(
-    session({
-        secret: 'scretIdHere', //a random string do not copy this value or your stuff will get hacked
-        resave: false, // default more info: https://www.npmjs.com/package/express-session#resave
-        saveUninitialized: false // default  more info: https://www.npmjs.com/package/express-session#resave
-    })
-)
+// app.use(
+//     session({
+//         secret: 'scretIdHere', //a random string do not copy this value or your stuff will get hacked
+//         resave: false, // default more info: https://www.npmjs.com/package/express-session#resave
+//         saveUninitialized: false // default  more info: https://www.npmjs.com/package/express-session#resave
+//     })
+// )
 
 //___________________
 // Controllers
@@ -88,11 +99,6 @@ app.use('/users', usersController)
 const sessionsController = require('./controllers/sessions_controller.js')
 app.use('/sessions', sessionsController)
 
-const chatsController = require('./controllers/chats_controller.js')
-app.use('/chats', chatsController)
-
-const clientController = require('./controllers/client_controller.js')
-app.use('/chats', clientController)
 
 
 
@@ -104,12 +110,51 @@ app.use('/chats', clientController)
 app.get('/', (req, res) => {
     res.redirect('/messages')
 });
+app.get('/chat', (req, res) => res.sendFile(__dirname + '/index.ejs'))
+
+
+//___________________
+//SOCKETS
+//___________________
+
+// Share session with io sockets
+ 
+io.use(sharedsession(session));
+ 
+
+io.on("connection", socket => {
+
+    console.log('new user connected ', socket.id)
+
+    socket.on('login', function(userdata) {
+        socket.handshake.session.userdata = userdata;
+        socket.handshake.session.save();
+        io.emit('login', socket.id + 'Welcome to the Chat!');
+    });
+
+    socket.on('chat', msg => {
+        console.log(msg)
+        io.emit('chat', socket.id +':' + msg)
+    });
+
+    socket.on('logout',function(userdata) {
+        if (socket.handshake.session.userdata) {
+            delete socket.handshake.session.userdata;
+            socket.handshake.session.save();
+        }
+        io.emit('logout', socket.id + ' has disconnected')
+    });        
+
+
+})
+
+
 
 //___________________
 //Listener
 //___________________
 
 
-app.listen(PORT, () => {
-    console.log('💻 Listening on port 🔥', PORT)
-})
+server.listen(PORT, () => {
+    console.log("server is listening on localhost:" + PORT);
+});
