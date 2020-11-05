@@ -78,14 +78,6 @@ app.use(express.json()); // returns middleware that only parses JSON - may or ma
 app.use(methodOverride('_method')); // allow POST, PUT and DELETE from a form
 
 
-// app.use(
-//     session({
-//         secret: 'scretIdHere', //a random string do not copy this value or your stuff will get hacked
-//         resave: false, // default more info: https://www.npmjs.com/package/express-session#resave
-//         saveUninitialized: false // default  more info: https://www.npmjs.com/package/express-session#resave
-//     })
-// )
-
 //___________________
 // Controllers
 //___________________
@@ -111,7 +103,9 @@ app.use('/sessions', sessionsController)
 app.get('/', (req, res) => {
     res.redirect('/messages')
 });
-app.get('/chat', (req, res) => res.sendFile(__dirname + '/views/chat/index.ejs'));
+app.get('/chat', (req, res) => {
+    res.render('chat/index.ejs')
+});
 
 
 //___________________
