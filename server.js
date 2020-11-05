@@ -122,18 +122,27 @@ io.use(sharedsession(session));
  
 
 io.on("connection", socket => {
+	socket.emit('sessiondata', socket.handshake.session);
 
     console.log('new user connected ', socket.id)
 
     socket.on('login', function(userdata) {
         socket.handshake.session.userdata = userdata;
         socket.handshake.session.save();
-        io.emit('login', socket.id + 'Welcome to the Chat!');
+        socket.emit('login', socket.handshake.session + 'Welcome to the Chat!');
     });
 
+    socket.on('checksession', function() {
+		debug('Received checksession message');
+
+		debug('socket.handshake session data is %j.', socket.handshake.session);
+
+		socket.emit('checksession', socket.handshake.session);
+    });
+    
     socket.on('chat', msg => {
         console.log(msg)
-        io.emit('chat', socket.id +':' + msg)
+        io.emit('chat', socket.handshake.session +':' + msg)
     });
 
     socket.on('logout',function(userdata) {
@@ -141,7 +150,7 @@ io.on("connection", socket => {
             delete socket.handshake.session.userdata;
             socket.handshake.session.save();
         }
-        io.emit('logout', socket.id + ' has disconnected')
+        io.emit('logout', socket.handshake.session + ' has disconnected')
     });        
 
 
