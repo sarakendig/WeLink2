@@ -122,8 +122,8 @@ io.on("connection", socket => {
 
     console.log('new user connected ', socket.id);
 
-    socket.on('login', function (userdata) {
-        socket.handshake.session.userdata = userdata;
+    socket.on('login', function () {
+        socket.handshake.session.username = currentUser.username;
         socket.handshake.session.save();
         socket.emit('login', socket.handshake.session + 'Welcome to the Chat!');
     });
@@ -138,12 +138,12 @@ io.on("connection", socket => {
 
     socket.on('chat', msg => {
         console.log(msg)
-        io.emit('chat', socket.handshake.session + ':' + msg)
+        io.emit('chat', socket.handshake.session.username + ':' + msg)
     });
 
-    socket.on('logout', function (userdata) {
-        if (socket.handshake.session.userdata) {
-            delete socket.handshake.session.userdata;
+    socket.on('logout', function () {
+        if (socket.handshake.session.username) {
+            delete socket.handshake.session.username;
             socket.handshake.session.save();
         }
         io.emit('logout', socket.handshake.session + ' has disconnected')
